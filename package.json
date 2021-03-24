@@ -1,5 +1,5 @@
 {
-  "name": "node-red-contrib-interactive-report",
+  "name": "@hte/node-red-contrib-interactive-report",
   "version": "0.0.1",
   "description": "",
   "main": "index.js",
