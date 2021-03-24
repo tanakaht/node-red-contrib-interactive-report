@@ -1,0 +1,82 @@
+<!-- Defining a node -->
+<script type="text/javascript">
+    const defaultPlays = [["setTime", [1974, 1989]]];
+    RED.nodes.registerType('add-plays',{
+        category: 'interactiveReport', // the palette category
+        color: '#a6bbcf',
+        //icon: 'crop.png', // saved in icons
+        defaults: {
+            name: { value: ""},
+            plays: {value: JSON.stringify(defaultPlays)}
+        },
+        inputs:1,
+        outputs:1,
+        label: function () { return this.name || 'add-plays'; },
+        oneditprepare: function () {
+            console.log(JSON.stringify(defaultPlays));
+            var node = this;
+            const fileName = '/visualizer/js/main.js';
+            node.prePlays = []
+
+            node.editor = RED.editor.createEditor({
+                id: 'node-input-plays',
+                mode: 'ace/mode/text',
+                value: JSON.stringify(defaultPlays).replaceAll(',', ',\n')
+            });
+            $.getJSON('/plays/pre-plays/'+node.id).then((data)=>{
+                node.prePlays = data
+            });
+            // previewのrender
+            $.getScript(fileName) // <- get React code form server part of pallet
+            .done(function() {
+                $.getJSON('/visualizer/data/'+node.id).then((data)=>{
+                    console.log(data);
+                    function renderVisSample(visType, params) {
+                        window.Visualizer.unmount(document.getElementById("visualizer-preview-root"))
+                        //const ref = window.Visualizer.createRef();
+                        const ref = window.Visualizer.createRef();
+                        const ele = window.Visualizer[visType]({...params, ...{ref: ref}});
+                        window.Visualizer.render(
+                            ele,
+                            document.getElementById("visualizer-preview-root")
+                        );
+                        return ref
+                    }
+                    let ref = renderVisSample(data.visType, {...data.data, ...{width: "100%"}});
+                    node.editor.on('change', (event)=>{
+                        let plays;
+                        try{
+                            plays = JSON.parse(node.editor.getValue());
+                        } catch(err){
+                            console.log("play is wrong");
+                            return;
+                        }
+                        ref.current.play([...node.prePlays, ...plays]);
+                    });
+                })
+            })
+            .fail(function(jqxhr, settings, exception ){
+                console.log('Fail of code load from:[' + fileName + ']', exception)
+            });
+        },
+    });
+</script>
+
+
+<!-- Edit dialog -->
+<script type="text/x-red" data-template-name="add-plays">
+    <!-- TODO: jsonベタがきはきついのでましなフォームを用意する -->
+    <div class="form-row">
+        <div style="height: 250px; min-height:150px;" class="node-text-editor" id="node-input-plays"></div>
+    </div>
+    <h1>sample</h1>
+    <div id="visualizer-preview-root"/>
+</script>
+
+
+<!-- Help text  -->
+<script type="text/x-red" data-help-name="add-plays">
+    <p>
+        no help
+    </p>
+</script>

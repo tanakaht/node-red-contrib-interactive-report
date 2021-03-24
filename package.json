@@ -1,0 +1,51 @@
+{
+  "name": "node-red-contrib-interactive-report",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack --mode development",
+    "build-all": "sh build.sh visualizer",
+    "comment": "add-play make-report make-sentence",
+    "start": "nodemon --watch pallets --exec 'npm run build-all'"
+  },
+  "node-red": {
+    "nodes": {
+      "visualizer": "/pallets/visualizer/visualizer.js",
+      "add-plays": "/pallets/add-plays/add-plays.js",
+      "make-report": "/pallets/make-report/make-report.js"
+    }
+  },
+  "nodemonConfig": {
+    "ignore": [
+      "*/build/"
+    ]
+  },
+  "author": "Volodymyr Tymets",
+  "license": "MIT",
+  "dependencies": {
+    "css-loader": "^5.1.4",
+    "lodash": "^4.17.21",
+    "style-loader": "^2.0.0"
+  },
+  "devDependencies": {
+    "@babel/polyfill": "^7.0.0-beta.52",
+    "@babel/preset-env": "^7.13.12",
+    "@babel/preset-react": "^7.12.13",
+    "@hte/react-interactive-report": "^1.0.3",
+    "babel-core": "^6.26.3",
+    "babel-loader": "^8.2.2",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-es2017": "^6.24.1",
+    "babel-preset-react": "^6.24.1",
+    "eslint": "^7.22.0",
+    "eslint-plugin-react": "^7.23.1",
+    "nock": "^13.0.11",
+    "nodemon": "^2.0.7",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "webpack": "^5.28.0",
+    "webpack-cli": "^4.5.0"
+  }
+}

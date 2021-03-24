@@ -1,0 +1,113 @@
+<!-- Defining a node -->
+<script type="text/javascript">
+    const defaultVisConfig = {
+        visType: "BubbleChart",
+        itemname: "name",
+        xname: "income",
+        yname: "lifeExpectancy",
+        rname: "population",
+        xscale: "scaleLog",
+        yscale: "scaleLinear",
+        rscale: "scaleSqrt"
+    };/*{
+        vistype: "BubbleChart",
+        itemname: "name",
+        xname: "",
+        yname: "",
+        rname: "",
+        xscale: "scaleLinear",
+        yscale: "scaleLinear",
+        rscale: "scaleLinear"
+    };*/
+    RED.nodes.registerType('visualizer',{
+        category: 'interactiveReport', // the palette category
+        color: '#a6bbcf',
+        //icon: 'crop.png', // saved in icons
+        defaults: {
+            name: { value: ""},
+            visconfig: {value: JSON.stringify(defaultVisConfig)}
+        },
+        inputs:1,
+        outputs:1,
+        label: function () { return this.name || 'visualizer'; },
+        oneditprepare: function () {
+            var node = this;
+            const fileName = '/visualizer/js/main.js';
+            let visconfig;
+            try{
+                visconfig = JSON.parse(node.visconfig);
+            } catch(err){
+                console.log("visconfig is wrong");
+                visconfig = {};
+            }
+
+            node.editor = RED.editor.createEditor({
+                id: 'node-input-visconfig',
+                mode: 'ace/mode/text',
+                value: JSON.stringify(defaultVisConfig).replaceAll(',', ',\n')
+            });
+
+            // previewのrender
+            $.getScript(fileName) // <- get React code form server part of pallet
+            .done(function() {
+                $.getJSON('/visualizer/data/'+node.id).then((data)=>{
+                    console.log(data);
+                    function renderVisSample(visType, params) {
+                        window.Visualizer.unmount(document.getElementById("visualizer-preview-root"));
+                        //const ref = window.Visualizer.createRef();
+                        const visSample = window.Visualizer[visType](params);
+                        window.Visualizer.render(
+                            visSample,
+                            document.getElementById("visualizer-preview-root")
+                        );
+                    }
+                    let visType = visconfig.visType || data.visType;
+                    renderVisSample(visType, {...data.data, ...visconfig, ...{width: "100%"}});
+                    node.editor.on('change', (event)=>{
+                        let visconfig;
+                        try{
+                            visconfig = JSON.parse(node.editor.getValue());
+                        } catch(err){
+                            console.log("visconfig is wrong");
+                            return;
+                        }
+                        let visType = visconfig.visType || data.visType;
+                        renderVisSample(visType, {...data.data, ...visconfig, ...{width: "100%"}})
+                    });
+                })
+            })
+            .fail(function(jqxhr, settings, exception ){
+                console.log('Fail of code load from:[' + fileName + ']', exception)
+            });
+        },
+        oneditsave: function() {
+            this.visconfig = this.editor.getValue();
+            this.editor.destroy();
+            delete this.editor;
+
+        },
+        oneditcancel: function() {
+            this.editor.destroy();
+            delete this.editor;
+        },
+    });
+</script>
+
+
+<!-- Edit dialog -->
+<script type="text/x-red" data-template-name="visualizer">
+    <!-- TODO: jsonベタがきはきついのでましなフォームを用意する -->
+    <div class="form-row">
+        <div style="height: 250px; min-height:150px;" class="node-text-editor" id="node-input-visconfig"></div>
+    </div>
+    <h1>sample</h1>
+    <div id="visualizer-preview-root"/>
+</script>
+
+
+<!-- Help text  -->
+<script type="text/x-red" data-help-name="visualizer">
+    <p>
+        no help
+    </p>
+</script>
